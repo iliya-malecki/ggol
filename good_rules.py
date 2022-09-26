@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import numpy as np
 import cv2
+
 def function():
     ...
 function = type(function)
@@ -8,8 +9,11 @@ function = type(function)
 def basic_convolution(field: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     return cv2.filter2D(field, -1, kernel, borderType=cv2.BORDER_ISOLATED)
 
+def fast_inv_gaussian_activation(field: np.ndarray) -> np.ndarray:
+    return (-1/np.exp(0.42*field**2)+1)
+
 def inv_gaussian_activation(field: np.ndarray) -> np.ndarray:
-    return (-1./np.power(2., (0.6*np.power(field, 2.)))+1.)
+    return (-1/np.power(2, (0.6*np.power(field, 2)))+1)
 
 def basic_intervention(field: np.ndarray, x: int, y:int) -> None:
     field[x, y] = 1
@@ -28,10 +32,13 @@ class CallableRuleset:
     convolution: function
     activation: function
     intervention: function
+    steps: int = 1
     initialization_percentage: float = 0.5
 
     def __call__(self, field: np.ndarray) -> np.ndarray:
-        return self.activation(self.convolution(field, self.kernel))
+        for _ in range(self.steps):
+            field = self.activation(self.convolution(field, self.kernel))
+        return field
 
 
 
@@ -54,6 +61,7 @@ slime_pulling_worms = CallableRuleset(
     ], dtype='float32'),
     convolution = basic_convolution,
     activation = inv_gaussian_activation,
+    steps=4,
     intervention = checkerboard_intervetion
 )
 
@@ -65,7 +73,9 @@ blood_pumping_worms = CallableRuleset(
     ], dtype='float32'),
     convolution = basic_convolution,
     activation = inv_gaussian_activation,
-    intervention = checkerboard_intervetion
+    intervention = checkerboard_intervetion,
+    steps=4,
+    initialization_percentage=0.2
 )
 
 pipes = CallableRuleset(

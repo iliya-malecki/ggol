@@ -25,23 +25,30 @@ class Buffer:
             self._buffer.pop(0)
     
     def get_smoothed(self):
-        return (
-            (np.mean(np.stack(self._buffer), axis=0))[..., np.newaxis] 
-            * self.color
-        ).astype('uint8')
+        if len(self._buffer) == 1:
+            field = self._buffer[0]
+        else:
+            field = np.mean(np.stack(self._buffer), axis=0)
+        return (field[..., np.newaxis] * self.color).astype('uint8')
         
 
-class Viewer:
+class GGOL:
 
-    def __init__(self, field: np.ndarray, rules: GOLRuleset, display_size:tuple[int, int], color, buffer_size, draw_every_n):
+    def __init__(
+        self, 
+        rules: GOLRuleset, 
+        field_size: tuple[int,int], 
+        display_size: tuple[int, int], 
+        color, 
+        buffer_size=1
+    ):
         pygame.init()
-        self.field = field
+        self.field = np.random.binomial(1,p=rules.initialization_percentage, size=field_size).astype('float32')
         self.rules = rules
         self.display = pygame.display.set_mode(display_size)
         self.font = pygame.font.SysFont("Arial", 18)
         self.clock = pygame.time.Clock()
         self.buffer = Buffer(color, buffer_size)
-        self.draw_every_n = draw_every_n
         
     def set_title(self, title):
         pygame.display.set_caption(title)
@@ -57,7 +64,7 @@ class Viewer:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         paused = ~paused
-                elif event.type == pygame.MOUSEMOTION:
+                elif event.type in [pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN]:
                     if pygame.mouse.get_pressed()[0]:
                         posx, posy = pygame.mouse.get_pos()
                         disx, disy = self.display.get_size()
@@ -70,8 +77,7 @@ class Viewer:
                             pass
 
             if not paused:
-                for _ in range(self.draw_every_n):
-                    self.field = self.rules(self.field)
+                self.field = self.rules(self.field)
                 
                 self.buffer.append(self.field)
 
@@ -80,9 +86,9 @@ class Viewer:
                                 self.buffer.get_smoothed()),
                             self.display.get_size()
                 )
-                self.display.blit(surf, (0, 0))
 
-                self.clock.tick(70)
+                self.display.blit(surf, (0, 0))
+                self.clock.tick()
                 fps = str(self.clock.get_fps())
                 self.display.blit(self.font.render(fps, 1, textcolor), (0, 0))
 
@@ -92,7 +98,12 @@ class Viewer:
 
 
 
-rules = good_rules.blood_pumping_worms
-field = np.random.binomial(1,p=rules.initialization_percentage, size=(400,400)).astype('float32')
-viewer = Viewer(field, rules, (800, 800), (200,200,250), 1, 4)
+rules = good_rules.slime_pulling_worms
+
+viewer = GGOL(
+    rules=rules, 
+    display_size=(800, 800),
+    field_size=(800, 800),
+    color=(200,200,250)
+)
 viewer.start()
