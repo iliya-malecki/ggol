@@ -17,7 +17,7 @@ class Buffer:
     def __init__(self, color, size):
         self.size = size
         self._buffer = []
-        self.color = np.array(color)
+        self.color = np.array(color, dtype='uint8')
 
     def append(self, field):
         self._buffer.append(field)
@@ -33,7 +33,7 @@ class Buffer:
 
 class Viewer:
 
-    def __init__(self, field: np.ndarray, rules: GOLRuleset, display_size:tuple[int, int], color, buffer_size):
+    def __init__(self, field: np.ndarray, rules: GOLRuleset, display_size:tuple[int, int], color, buffer_size, draw_every_n):
         pygame.init()
         self.field = field
         self.rules = rules
@@ -41,6 +41,7 @@ class Viewer:
         self.font = pygame.font.SysFont("Arial", 18)
         self.clock = pygame.time.Clock()
         self.buffer = Buffer(color, buffer_size)
+        self.draw_every_n = draw_every_n
         
     def set_title(self, title):
         pygame.display.set_caption(title)
@@ -69,8 +70,8 @@ class Viewer:
                             pass
 
             if not paused:
-
-                self.field = self.rules(self.field)
+                for _ in range(self.draw_every_n):
+                    self.field = self.rules(self.field)
                 
                 self.buffer.append(self.field)
 
@@ -78,7 +79,7 @@ class Viewer:
                             pygame.surfarray.make_surface(
                                 self.buffer.get_smoothed()),
                             self.display.get_size()
-                        )
+                )
                 self.display.blit(surf, (0, 0))
 
                 self.clock.tick(70)
@@ -91,7 +92,7 @@ class Viewer:
 
 
 
-rules = good_rules.moving_rocks
+rules = good_rules.blood_pumping_worms
 field = np.random.binomial(1,p=rules.initialization_percentage, size=(400,400)).astype('float32')
-viewer = Viewer(field, rules, (800, 800), (60,20,10), 4)
+viewer = Viewer(field, rules, (800, 800), (200,200,250), 1, 4)
 viewer.start()
