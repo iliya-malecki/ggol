@@ -1,8 +1,8 @@
 from typing import Protocol
-import cv2
 import numpy as np
 import pygame
 import good_rules
+
 
 class GOLRuleset(Protocol):
     def __call__(self, field: np.ndarray) -> np.ndarray:
@@ -17,7 +17,7 @@ class Buffer:
     def __init__(self, color, size):
         self.size = size
         self._buffer = []
-        self.color = np.array(color, dtype='uint8')
+        self.color = color
 
     def append(self, field):
         self._buffer.append(field)
@@ -38,23 +38,42 @@ class GGOL:
         self, 
         rules: GOLRuleset, 
         field_size: tuple[int,int], 
-        display_size: tuple[int, int], 
+        display_size: 'tuple[int, int]|float', 
         color, 
-        buffer_size=1
+        buffer_size=1,
+        display_flags=0
     ):
         pygame.init()
+        self.display = pygame.display.set_mode(display_size, display_flags)
+        disx, disy = self.display.get_size()
+        if isinstance(field_size, (int, float)):
+            field_size = (int(disx*field_size), int(disy*field_size))
         self.field = np.random.binomial(1,p=rules.initialization_percentage, size=field_size).astype('float32')
         self.rules = rules
-        self.display = pygame.display.set_mode(display_size)
         self.font = pygame.font.SysFont("Arial", 18)
         self.clock = pygame.time.Clock()
-        self.buffer = Buffer(color, buffer_size)
-        
-    def set_title(self, title):
-        pygame.display.set_caption(title)
-    
+        self.buffer = Buffer(np.full(field_size+(3,),color).astype('uint8'), buffer_size)
+
+
+    def draw(self):
+        self.field = self.rules(self.field)
+                
+        self.buffer.append(self.field)
+
+        surf = pygame.transform.scale(
+                    pygame.surfarray.make_surface(
+                        self.buffer.get_smoothed()),
+                    self.display.get_size()
+        )
+
+        self.display.blit(surf, (0, 0))
+        self.clock.tick()
+        fps = str(self.clock.get_fps())
+        self.display.blit(self.font.render(fps, 1, pygame.Color("coral")), (0, 0))
+     
+
     def start(self):
-        textcolor = pygame.Color("coral")
+
         alive = True
         paused = False
         while alive:
@@ -64,6 +83,11 @@ class GGOL:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         paused = ~paused
+                    if (
+                        event.key == pygame.K_ESCAPE 
+                        or event.key == pygame.K_c and pygame.key.get_mods() & pygame.KMOD_CTRL
+                        ):
+                        alive = False
                 elif event.type in [pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN]:
                     if pygame.mouse.get_pressed()[0]:
                         posx, posy = pygame.mouse.get_pos()
@@ -77,33 +101,21 @@ class GGOL:
                             pass
 
             if not paused:
-                self.field = self.rules(self.field)
-                
-                self.buffer.append(self.field)
-
-                surf = pygame.transform.scale(
-                            pygame.surfarray.make_surface(
-                                self.buffer.get_smoothed()),
-                            self.display.get_size()
-                )
-
-                self.display.blit(surf, (0, 0))
-                self.clock.tick()
-                fps = str(self.clock.get_fps())
-                self.display.blit(self.font.render(fps, 1, textcolor), (0, 0))
+                self.draw()
 
             pygame.display.update()
 
         pygame.quit()
 
 
-
 rules = good_rules.slime_pulling_worms
 
 viewer = GGOL(
     rules=rules, 
-    display_size=(800, 800),
-    field_size=(800, 800),
-    color=(200,200,250)
+    display_size=(0, 0),
+    field_size=1/2,
+    color=(180,180,100),
+    display_flags=pygame.FULLSCREEN
 )
+
 viewer.start()

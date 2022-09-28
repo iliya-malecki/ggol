@@ -1,17 +1,20 @@
 from dataclasses import dataclass
 import numpy as np
 import cv2
+import numba 
+from types import FunctionType
 
-def function():
-    ...
-function = type(function)
+jit = numba.jit(nopython=True, parallel=True, fastmath=True)
+
 
 def basic_convolution(field: np.ndarray, kernel: np.ndarray) -> np.ndarray:
-    return cv2.filter2D(field, -1, kernel, borderType=cv2.BORDER_ISOLATED)
+    return cv2.filter2D(field, -1, kernel, borderType=cv2.BORDER_ISOLATED).astype('float32')
 
+@jit
 def fast_inv_gaussian_activation(field: np.ndarray) -> np.ndarray:
     return (-1/np.exp(0.42*field**2)+1)
 
+@jit
 def inv_gaussian_activation(field: np.ndarray) -> np.ndarray:
     return (-1/np.power(2, (0.6*np.power(field, 2)))+1)
 
@@ -29,9 +32,9 @@ def checkerboard_intervetion(field: np.ndarray, x: int, y:int) -> None:
 class CallableRuleset:
 
     kernel: np.ndarray
-    convolution: function
-    activation: function
-    intervention: function
+    convolution: FunctionType
+    activation: FunctionType
+    intervention: FunctionType
     steps: int = 1
     initialization_percentage: float = 0.5
 
