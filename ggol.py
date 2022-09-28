@@ -57,7 +57,7 @@ class GGOL:
 
     def draw(self):
         self.field = self.rules(self.field)
-                
+
         self.buffer.append(self.field)
 
         surf = pygame.transform.scale(
@@ -72,7 +72,7 @@ class GGOL:
         self.display.blit(self.font.render(fps, 1, pygame.Color("coral")), (0, 0))
      
 
-    def start(self):
+    def __call__(self):
 
         alive = True
         paused = False
@@ -108,14 +108,11 @@ class GGOL:
         pygame.quit()
 
 
-rules = good_rules.slime_pulling_worms
 
-viewer = GGOL(
-    rules=rules, 
-    display_size=(0, 0),
-    field_size=1/2,
-    color=(180,180,100),
-    display_flags=pygame.FULLSCREEN
-)
-
-viewer.start()
+# GGOL(
+#     rules=good_rules.slime_pulling_worms, 
+#     display_size=(0, 0),
+#     field_size=1/2,
+#     color=(180,180,100),
+#     display_flags=pygame.FULLSCREEN
+# )()

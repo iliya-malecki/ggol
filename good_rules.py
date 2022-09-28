@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import numba 
 from types import FunctionType
+import numexpr as ne
 
 jit = numba.jit(nopython=True, parallel=True, fastmath=True)
 
@@ -12,11 +13,15 @@ def basic_convolution(field: np.ndarray, kernel: np.ndarray) -> np.ndarray:
 
 @jit
 def fast_inv_gaussian_activation(field: np.ndarray) -> np.ndarray:
-    return (-1/np.exp(0.42*field**2)+1)
+    return (-1/(np.exp(0.41 * np.square(field)))+1).astype('float32')
+
+@jit
+def fast_lowkurt_inv_gaussian_activation(field: np.ndarray) -> np.ndarray:
+    return (-1.01/(np.exp(0.4159 * np.square(field))+.02)+1)
 
 @jit
 def inv_gaussian_activation(field: np.ndarray) -> np.ndarray:
-    return (-1/np.power(2, (0.6*np.power(field, 2)))+1)
+    return (-1/np.exp2(0.6*np.square(field))+1).astype('float32')
 
 def basic_intervention(field: np.ndarray, x: int, y:int) -> None:
     field[x, y] = 1
