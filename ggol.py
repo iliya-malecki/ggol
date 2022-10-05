@@ -18,18 +18,17 @@ class Buffer:
         self.size = size
         self._buffer = []
         self.color = color
+        if self.size == 1:
+            self.get_smoothed = lambda: (self._buffer[0][..., np.newaxis] * self.color).astype('uint8')
+            
+    def get_smoothed(self):
+        return (np.mean(np.stack(self._buffer), axis=0)[..., np.newaxis] * self.color).astype('uint8')
 
     def append(self, field):
         self._buffer.append(field)
         if len(self._buffer) > self.size:
             self._buffer.pop(0)
     
-    def get_smoothed(self):
-        if len(self._buffer) == 1:
-            field = self._buffer[0]
-        else:
-            field = np.mean(np.stack(self._buffer), axis=0)
-        return (field[..., np.newaxis] * self.color).astype('uint8')
         
 
 class GGOL:
