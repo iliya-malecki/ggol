@@ -109,10 +109,10 @@ class GGOL:
 
 
 
-# GGOL(
-#     rules=good_rules.slime_pulling_worms, 
-#     display_size=(0, 0),
-#     field_size=1/2,
-#     color=(180,180,100),
-#     display_flags=pygame.FULLSCREEN
-# )()
+GGOL(
+    rules=good_rules.slime_pulling_worms, 
+    display_size=(0, 0),
+    field_size=1/2,
+    color=(180,180,100),
+    display_flags=pygame.FULLSCREEN
+)()

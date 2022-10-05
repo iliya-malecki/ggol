@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import numba 
 from types import FunctionType
-import numexpr as ne
+
 
 jit = numba.jit(nopython=True, parallel=True, fastmath=True)
 
