@@ -4,7 +4,6 @@ import cv2
 import numba 
 from types import FunctionType
 
-
 jit = numba.jit(nopython=True, parallel=True, fastmath=True)
 
 
