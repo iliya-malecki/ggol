@@ -35,12 +35,12 @@ def checkerboard_intervetion(field: np.ndarray, x: int, y:int) -> None:
 @dataclass
 class CallableRuleset:
 
-    kernel: np.ndarray
-    convolution: FunctionType
-    activation: FunctionType
-    intervention: FunctionType
-    steps: int = 1
-    initialization_percentage: float = 0.5
+    kernel                      : np.ndarray
+    convolution                 : FunctionType
+    activation                  : FunctionType
+    intervention                : FunctionType
+    steps                       : int = 1
+    initialization_percentage   : float = 0.5
 
     def __call__(self, field: np.ndarray) -> np.ndarray:
         for _ in range(self.steps):
