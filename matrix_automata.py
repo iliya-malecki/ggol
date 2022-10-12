@@ -145,7 +145,7 @@ class AutomataDisplay:
 AutomataDisplay(
     rules=good_rules.slime_pulling_worms,
     display_size=(1, 1),
-    field_size=1 / 4,
+    field_size=1,
     color=(180, 180, 100),
     fullscreen=True,
 )()
