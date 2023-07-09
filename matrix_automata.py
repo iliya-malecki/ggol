@@ -1,9 +1,7 @@
 from typing import Protocol
 import numpy as np
-import good_rules
 from glumpy import app, gloo, gl, key
-from good_rules import CallableRuleset, basic_convolution, fast_inv_gaussian_activation, checkerboard_intervetion
-import cv2
+from rules import CallableRuleset, basic_convolution, fast_inv_gaussian_activation, checkerboard_intervetion
 
 app.use('qt5')
 
