@@ -168,19 +168,20 @@ class AutomataDisplay:
     def __call__(self, framerate=0):
         app.run(framerate=framerate)
 
+if __name__ == '__main__':
 
-AutomataDisplay(
-    rules=CallableRuleset(
-        np.array([[ 0.24879229, -0.8920062 ,  0.24879229],
-       [-0.8920062 ,  0.46585773, -0.8920062 ],
-       [ 0.24879229, -0.8920062 ,  0.24879229]]),
-        basic_convolution,
-        fast_inv_gaussian_activation,
-        checkerboard_intervetion
-    ),
-    display_size=(1, 1),
-    field_size=1,
-    color=(100, 180, 100),
-    fullscreen=True,
-    buffer=EveryNthBuffer(4),
-)()
+    AutomataDisplay(
+        rules=CallableRuleset(
+            np.array([[ 0.24879229, -0.8920062 ,  0.24879229],
+        [-0.8920062 ,  0.46585773, -0.8920062 ],
+        [ 0.24879229, -0.8920062 ,  0.24879229]]),
+            basic_convolution,
+            fast_inv_gaussian_activation,
+            checkerboard_intervetion
+        ),
+        display_size=(1, 1),
+        field_size=1,
+        color=(100, 180, 100),
+        fullscreen=True,
+        buffer=EveryNthBuffer(4),
+    )()
