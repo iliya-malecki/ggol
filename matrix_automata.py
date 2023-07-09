@@ -2,7 +2,8 @@ from typing import Protocol
 import numpy as np
 import good_rules
 from glumpy import app, gloo, gl, key
-
+from good_rules import CallableRuleset, basic_convolution, fast_inv_gaussian_activation, checkerboard_intervetion
+import cv2
 
 app.use('qt5')
 
@@ -21,6 +22,13 @@ class AutomataRuleset(Protocol):
         ...
 
 
+class Buffer(Protocol):
+    def get_smoothed(self) -> np.ndarray:
+        ...
+
+    def append(self, field: np.ndarray) -> None:
+        ...
+
 class MeanFrameBuffer:
     def __init__(self, size):
         self.size = size
@@ -33,6 +41,22 @@ class MeanFrameBuffer:
         self._buffer.append(field)
         if len(self._buffer) > self.size:
             self._buffer.pop(0)
+
+
+class EveryNthBuffer:
+    def __init__(self, size):
+        self.size = size
+        self.state = 0
+
+    def get_smoothed(self):
+        return self._buffer
+
+    def append(self, field):
+        if self.state == 0:
+            self._buffer = field
+        self.state += 1
+        if self.state >= self.size:
+            self.state = 0
 
 
 class OneFrameFakeBuffer:
@@ -51,26 +75,24 @@ class OneFrameFakeBuffer:
 class AutomataDisplay:
     def __init__(
         self,
-        rules: AutomataRuleset,
-        field_size: 'tuple[int,int]|float',
-        display_size: 'tuple[int, int]',
-        color: 'tuple[np.int8, np.int8, np.int8]',
-        buffer_size=1,
+        rules:AutomataRuleset,
+        field_size:'tuple[int,int]|float',
+        display_size:'tuple[int, int]',
+        color:'tuple[np.int8, np.int8, np.int8]',
+        buffer:Buffer=None,
         fullscreen=True,
     ):
         self.window = app.Window(*display_size, fullscreen=fullscreen)
         disx, disy = self.window.get_size()
         if isinstance(field_size, (int, float)):
             field_size = (int(disy * field_size), int(disx * field_size))
-        self.field = np.random.binomial(
-            1, p=rules.initialization_percentage, size=field_size
-        ).astype('float32')
+        self.field = np.random.uniform(0, 1, size=field_size).astype('float32')
         self.rules = rules
 
-        if buffer_size == 1:
+        if buffer is None:
             self.buffer = OneFrameFakeBuffer()
         else:
-            self.buffer = MeanFrameBuffer(buffer_size)
+            self.buffer = buffer
 
         self.quad = gloo.Program(
             vertex='''
@@ -101,6 +123,7 @@ class AutomataDisplay:
         self.quad['color'] = np.array(color) / 255
 
         self.pause = False
+        self.total_frames = 0
         self.window.event(self.on_draw)
         self.window.event(self.on_key_press)
         self.window.event(self.on_mouse_drag)
@@ -108,6 +131,7 @@ class AutomataDisplay:
 
     def on_draw(self, dt):
         if not self.pause:
+            self.total_frames += 1
             self.field = self.rules(self.field)
             self.buffer.append(self.field)
             self.quad['texture'] = self.buffer.get_smoothed()
@@ -116,7 +140,10 @@ class AutomataDisplay:
 
     def on_key_press(self, symbol, modifiers):
         if symbol == key.ESCAPE:
-            print(f'[i] Quitting. FPS was {self.window.fps:.2f}')
+            print(f'[i] Quitting. FPS was {self.window.fps:.2f}. '
+                  f'Simultaion ran for {self.total_frames} frames.'
+            )
+            print(f'{np.mean(self.field) = }')
             app.quit()
 
         elif symbol == key.SPACE:
@@ -143,9 +170,17 @@ class AutomataDisplay:
 
 
 AutomataDisplay(
-    rules=good_rules.slime_pulling_worms,
+    rules=CallableRuleset(
+        np.array([[ 0.24879229, -0.8920062 ,  0.24879229],
+       [-0.8920062 ,  0.46585773, -0.8920062 ],
+       [ 0.24879229, -0.8920062 ,  0.24879229]]),
+        basic_convolution,
+        fast_inv_gaussian_activation,
+        checkerboard_intervetion
+    ),
     display_size=(1, 1),
     field_size=1,
-    color=(180, 180, 100),
+    color=(100, 180, 100),
     fullscreen=True,
+    buffer=EveryNthBuffer(4),
 )()
