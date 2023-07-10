@@ -84,7 +84,7 @@ class AutomataDisplay:
         disx, disy = self.window.get_size()
         if isinstance(field_size, (int, float)):
             field_size = (int(disy * field_size), int(disx * field_size))
-        self.field = np.random.uniform(0, 1, size=field_size).astype('float32')
+        self.field = np.random.default_rng(42).uniform(0, 1, size=field_size).astype('float32')
         self.rules = rules
 
         if buffer is None:
@@ -170,9 +170,9 @@ if __name__ == '__main__':
 
     AutomataDisplay(
         rules=CallableRuleset(
-            np.array([[ 0.24879229, -0.8920062 ,  0.24879229],
-        [-0.8920062 ,  0.46585773, -0.8920062 ],
-        [ 0.24879229, -0.8920062 ,  0.24879229]]),
+            np.array([[-0.88885623,  0.49463819, -0.88885623],
+       [ 0.49463819, -0.74555808,  0.49463819],
+       [-0.88885623,  0.49463819, -0.88885623]]),
             basic_convolution,
             fast_inv_gaussian_activation,
             checkerboard_intervetion
@@ -181,5 +181,5 @@ if __name__ == '__main__':
         field_size=1,
         color=(100, 180, 100),
         fullscreen=True,
-        buffer=EveryNthBuffer(4),
+        # buffer=EveryNthBuffer(4),
     )()
